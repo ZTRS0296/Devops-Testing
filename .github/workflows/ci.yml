@@ -60,15 +60,28 @@ jobs:
             -F "file=@junit.xml;type=application/xml" \
             "${REDMINE_BASE_URL}/devops/builds/${REDMINE_BUILD_ID}/test_results.json"
 
-  demo-deploy:
+  deploy-staging:
     needs: [test]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: staging
 
     steps:
-      - name: Simulate deployment
+      - name: Simulate staging deployment
         run: |
-          echo "Deploying demo build ${GITHUB_SHA} to staging"
+          echo "Deploying ${GITHUB_SHA} to staging"
           sleep 5
-          echo "Deployment complete"
+          echo "Staging deployment complete"
+
+  deploy-production:
+    needs: [deploy-staging]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Simulate production deployment
+        run: |
+          echo "Deploying ${GITHUB_SHA} to production"
+          sleep 5
+          echo "Production deployment complete"
