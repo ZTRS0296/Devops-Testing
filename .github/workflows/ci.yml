@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "develop", "feature/**"]
+  pull_request:
+    branches: ["main", "develop"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests with JUnit + coverage
+        run: |
+          pytest -q \
+            --junitxml=junit.xml \
+            --cov=src \
+            --cov-report=xml:coverage.xml
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            junit.xml
+            coverage.xml
+
+      - name: Post JUnit to Redmineflux DevOps (optional)
+        if: always() && env.REDMINE_BASE_URL != '' && env.REDMINE_PROJECT_ID != '' && env.REDMINE_INGESTION_KEY != ''
+        env:
+          REDMINE_BASE_URL: ${{ secrets.REDMINE_BASE_URL }}
+          REDMINE_PROJECT_ID: ${{ secrets.REDMINE_PROJECT_ID }}
+          REDMINE_INGESTION_KEY: ${{ secrets.REDMINE_INGESTION_KEY }}
+        run: |
+          curl --fail --show-error --silent \
+            -X POST \
+            -H "X-DevOps-Ingestion-Key: ${REDMINE_INGESTION_KEY}" \
+            -F "file=@junit.xml;type=application/xml" \
+            "${REDMINE_BASE_URL}/devops/webhook/github/${REDMINE_PROJECT_ID}/test_results"
+
+  demo-deploy:
+    needs: [test]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Simulate deployment
+        run: |
+          echo "Deploying demo build ${GITHUB_SHA} to staging"
+          sleep 5
+          echo "Deployment complete"
