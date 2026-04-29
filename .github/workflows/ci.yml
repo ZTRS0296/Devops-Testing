@@ -33,7 +33,7 @@ jobs:
 
       - name: Run tests with JUnit + coverage
         run: |
-          pytest -q \
+          PYTHONPATH=. pytest -q \
             --junitxml=junit.xml \
             --cov=src \
             --cov-report=xml:coverage.xml
@@ -47,18 +47,18 @@ jobs:
             junit.xml
             coverage.xml
 
-      - name: Post JUnit to Redmineflux DevOps (optional)
-        if: always() && env.REDMINE_BASE_URL != '' && env.REDMINE_PROJECT_ID != '' && env.REDMINE_INGESTION_KEY != ''
+      - name: Upload JUnit via Redmine API (optional)
+        if: always() && env.REDMINE_BASE_URL != '' && env.REDMINE_API_KEY != '' && env.REDMINE_BUILD_ID != ''
         env:
           REDMINE_BASE_URL: ${{ secrets.REDMINE_BASE_URL }}
-          REDMINE_PROJECT_ID: ${{ secrets.REDMINE_PROJECT_ID }}
-          REDMINE_INGESTION_KEY: ${{ secrets.REDMINE_INGESTION_KEY }}
+          REDMINE_API_KEY: ${{ secrets.REDMINE_API_KEY }}
+          REDMINE_BUILD_ID: ${{ secrets.REDMINE_BUILD_ID }}
         run: |
           curl --fail --show-error --silent \
             -X POST \
-            -H "X-DevOps-Ingestion-Key: ${REDMINE_INGESTION_KEY}" \
+            -H "X-Redmine-API-Key: ${REDMINE_API_KEY}" \
             -F "file=@junit.xml;type=application/xml" \
-            "${REDMINE_BASE_URL}/devops/webhook/github/${REDMINE_PROJECT_ID}/test_results"
+            "${REDMINE_BASE_URL}/devops/builds/${REDMINE_BUILD_ID}/test_results.json"
 
   demo-deploy:
     needs: [test]
