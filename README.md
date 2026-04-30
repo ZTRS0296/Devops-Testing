@@ -19,3 +19,4 @@ Use Redmine issue IDs in branch and commit messages, e.g.:
 - Commit: `Fixes #123 add CI for dummy project`
 
 This helps Redmineflux DevOps auto-link commits, PRs, builds, and deployments. This code is basically testing for redmineflux_devops plugin nothing else.
+If you find any issue please raise an issue in github.
