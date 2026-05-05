@@ -1,144 +1,56 @@
-# Redmineflux Workload Plugin
+# devops-dummy-python
 
-A Redmine plugin for team and workload management.
+A small Python calculator project used for DevOps and CI/CD practice.
 
 ## Features
 
-### Team Management
-- Create, update, list, and delete teams
-- Each team has a name and optional description
-- Track who created each team
+- Basic operations: `add`, `sub`, `mul`, `div`
+- Safe expression evaluator for `+`, `-`, `*`, `/`, and parentheses
+- Command-line interface for quick calculations
+- Pytest test suite for unit and parser tests
 
-### Team Roles
-- Define roles within teams (e.g., Manager, Lead, Member)
-- Roles include `can_approve_leave` flag for future leave management
-- Roles are reusable across all teams
+## Project Structure
 
-### Team Membership
-- Add users to teams with specific roles
-- One role per user per team
-- Prevents duplicate user entries in the same team
-- Users can belong to multiple teams
+- `src/calculator.py` - Core calculator logic
+- `src/cli.py` - Command-line interface
+- `tests/test_calculator.py` - Calculator unit tests
+- `tests/test_cli.py` - CLI parser tests
 
-## Installation
+## Prerequisites
 
-1. Copy the plugin to your Redmine `plugins` directory:
-   ```bash
-   cd /path/to/redmine/plugins
-   git clone <repository-url> redmineflux_workload
-   ```
+- Python 3.10+
+- `pip`
 
-2. Run the plugin migrations:
-   ```bash
-   bundle exec rake redmine:plugins:migrate RAILS_ENV=production
-   ```
+## Setup
 
-3. Restart Redmine
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
-## Configuration
+## Run Tests
 
-### Permissions
-
-The plugin adds a global permission: **Manage teams and roles** (`manage_rf_teams`)
-
-This permission allows users to:
-- Create, edit, and delete teams
-- Create team roles
-- Add/remove team members
-- Change member roles
-
-To grant this permission:
-1. Go to Administration → Roles and permissions
-2. Select a role (e.g., Manager)
-3. Enable "Manage teams and roles" permission
-
-### Menu Access
-
-A "Teams" menu item is automatically added to the top menu for all logged-in users.
+```bash
+pytest -q
+```
 
 ## Usage
 
-### Creating Team Roles
+### 1) Operation mode
 
-1. Navigate to Teams → Team Roles
-2. Click "New Team Role"
-3. Enter role name (e.g., Manager, Lead, Member)
-4. Optionally check "Can approve leave" for future functionality
-5. Click "Create"
+```bash
+python -m src.cli calc add 2 3
+python -m src.cli calc div 10 4
+```
 
-### Creating Teams
+### 2) Expression mode
 
-1. Navigate to Teams
-2. Click "New Team"
-3. Enter team name and description
-4. Click "Create"
+```bash
+python -m src.cli expr "(2 + 3) * 4 - 6 / 2"
+```
 
-### Adding Team Members
+## Notes
 
-1. Open a team
-2. In the "Members" section, select:
-   - User from the dropdown
-   - Role for that user
-3. Click "Add"
-
-### Managing Members
-
-- View all team members in the team detail page
-- Remove members using the delete icon
-- Each user can only be added once per team
-
-## Database Schema
-
-### Tables
-
-#### rf_teams
-- `id` - Primary key
-- `name` - Team name (required)
-- `description` - Team description (text)
-- `created_by_id` - Creator user ID
-- `created_at`, `updated_at` - Timestamps
-
-#### rf_team_roles
-- `id` - Primary key
-- `name` - Role name (required, unique)
-- `can_approve_leave` - Boolean flag (default: false)
-- `created_at`, `updated_at` - Timestamps
-
-#### rf_team_memberships
-- `id` - Primary key
-- `team_id` - Foreign key to rf_teams
-- `user_id` - Foreign key to users (Redmine core)
-- `team_role_id` - Foreign key to rf_team_roles
-- `created_at`, `updated_at` - Timestamps
-- Unique constraint on [team_id, user_id]
-
-## Technical Details
-
-### Naming Conventions
-
-All database tables, models, controllers, and files use the `rf_` prefix:
-- Tables: `rf_teams`, `rf_team_roles`, `rf_team_memberships`
-- Models: `RfTeam`, `RfTeamRole`, `RfTeamMembership`
-- Controllers: `RfTeamsController`, `RfTeamRolesController`, `RfTeamMembershipsController`
-
-### Models
-
-- **RfTeam**: Represents a team with members
-- **RfTeamRole**: Defines roles that can be assigned to team members
-- **RfTeamMembership**: Join table linking teams, users, and roles
-
-### Authorization
-
-- Uses Redmine's built-in authorization system
-- Global permission `:manage_rf_teams` required for create/update/delete operations
-- Read access available to all logged-in users
-
-## Future Enhancements
-
-This plugin is designed to be extended with:
-- Leave management functionality (using the `can_approve_leave` role flag)
-- Workload tracking and allocation
-- Skills management
-- Availability calendars
-
-## Development
+- Division by zero raises `ZeroDivisionError`.
+- Expression evaluation rejects unsafe syntax (for example function calls).
